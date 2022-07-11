@@ -40,9 +40,11 @@ printHelp() {
 				%s list					-- List games, numbers provided are for use with remove / delete options.
 				%s lang <en|ja|ko|de|fr|it> [default|#]	-- Change the language of GShade's interface.  Defaults to the master copy if unspecified.
 				%s remove <#>				-- Remove <#> from database, leave GShade in whatever shape it's currently in.
+        %s installCX        -- Use the semi-automated CX installer.
 				%s delete <#>				-- Delete GShade from <#> and remove from database.
 	      %s ffxiv					-- Attempt to Automatically install in FFXIV (both Square Enix's launcher and XIV On Mac supported)
         %s sims4cx        -- Attempt auto install for Sims4 (requires Crossover + Windows version of Sims4!)
+
  WINEPREFIX=/path/to/prefix	%s [dx(?)|opengl] /path/to/game.exe		-- Install to custom location with designated graphical API version. 'dxgi' is valid here.
 
 									Note: game.exe should be the GAME'S .exe file, NOT the game's launcher, if it has one!\n"
@@ -517,8 +519,8 @@ sims4cx() {
   gameExe="TS4_x64.exe"
   gapi=d3d9
   ARCH=64
-  if ( $IS_MAC )
-    then
+
+
     if [ ! -d "$HOME/Library/Application Support/CrossOver" ]
      then
        printf "\n No Crossover install detected. "
@@ -602,7 +604,7 @@ sims4cx() {
             fi
           fi
 fi
-fi
+
 
 }
 
@@ -644,7 +646,7 @@ XIVinstall() {
       if (yesNo "Install Y/N?"); then
         printf "\nInstalling...  ";
         installGame
-        printf "\nIf you have a MacBook Pro it's Fn+Shift+f2 to open the gshade window!"
+        printf "\nIf you have a MacBook it's Fn+Shift+f2 to open the gshade window!"
         printf "Complete!\n"
       fi
     fi
@@ -667,6 +669,65 @@ XIVinstall() {
 
   printf "\nScan complete.\n"
 }
+
+installCX() {
+
+  IFS=$'\n'
+  # bottles=( $(find "$HOME/Library/Application Support/CrossOver/Bottles" -maxdepth 1 -type d -exec basename {} \; ) )
+  bottles=( $(find "$HOME/Library/Application Support/XIV on Mac" -maxdepth 1 -type d -exec basename {} \; ) )
+  availableBottles=" Detected CrossOver Bottles: \n"
+
+  printf ${availableBottles}
+  for i in "${!bottles[@]}";
+  do
+    printf "%s\t%s\n" "$i" "${bottles[$i]}"
+
+  done
+  read -p "What Bottle is the Game installed into? Please enter the number next to your selection:" -r useIndex
+  printf "\n"
+
+  # WINEPREFIX="$HOME/Library/Application Support/CrossOver/Bottles/${bottles[$useBottle]}/"
+  WINEPREFIX="$HOME/Library/Application Support/XIV on Mac/${bottles[$useIndex]}/"
+
+  gameExe=""
+  read -p "What is the name of the .EXE for the game you're trying to install? (note NOT the launcher if there is one - IE ffxiv_dx11.exe not ffxiv_boot.exe)" -r gameExe
+  gameLoc=( $(find "$WINEPREFIX" -type f -name "$gameExe" -exec dirname {} \; ))
+
+  printf "\n"
+  while true; do
+    read -p "What graphics API is the game using? (opengl,dx9,dx10,dx11,dx12) (if unsure, Google): " -r input
+    case $input in
+      opengl | gl) gapi=opengl32; break;;
+      dx9  | 9  ) gapi=d3d9;  break;;
+      dx10 | 10 ) gapi=d3d10; break;;
+      dx11 | 11 ) gapi=d3d11; break;;
+      dx12 | 12 ) gapi=d3d12; break;;
+      dxgi | gi ) gapi=dxgi; break;;
+      * ) printf "Invalid option.\n";;
+    esac
+  done
+  isArch=( "$(file -b "$gameLoc/$gameExe" | grep -o 'x[0-9][0-9]-[0-9][0-9]' )" )
+
+  if [ $isArch == x86-64 ]
+    then
+      ARCH=64
+    else
+      ARCH=32
+    fi
+  if (yesNo "Does this look Correct? $ARCH bit architecture $gameExe using graphics API $input is installed in the ${bottles[$useBottle]} Bottle at $gameLoc/$gameExe Y/N");
+    then
+      printf "\n Creating...  "
+      installGame
+      printf "\nIf you have a MacBook it's Fn+Shift+f2 to open the gshade window! \n"
+      printf "Complete!\n"
+    else
+      printf "\nAborting installation.\n"
+       exit 1
+      fi
+}
+
+
+# Walkthrough for custom CrossOver game option selected from the general menu.  Gets input for $gapi, $WINEPREFIX, $gameExe, and $exeFile (which is really $fullPathToExeFile).
 
 # Walkthrough for custom game option selected from the general menu.  Gets input for $gapi, $WINEPREFIX, $gameExe, and $exeFile (which is really $fullPathToExeFile).
 customGamePrompt() {
@@ -722,6 +783,7 @@ menu() {
 	L) Change GShade's language
 	R) Remove game from installed games list
 	D) Delete GShade from game and remove from list
+  C) Semi-guided installer for games installed in a CrossOver Bottle
 	0) Redownload compilers
 	Q) Quit
 "
@@ -739,6 +801,7 @@ stepByStep() {
       [2]* ) printf "\n"; customGamePrompt; customGame; break;;
       [Ff]* ) XIVinstall; break;;
       [4]* ) sims4cx; break;;
+      [Cc]* ) printf "\n"; installCX; break;;
       [Pp]* ) presetUpdate; printf "Done!\n"; break;;
       [Bb]* ) performBackup; printf "Done!\n"; break;;
       [Ss]* ) listGames; if [ $? ]; then printf "%b" "\n$gamesList"; else printf "\nNo games yet installed to.\n"; fi;;
@@ -794,6 +857,7 @@ stepByStep() {
         fi
       forgetGame
       menu;;
+
       [0]* ) printf "\n"; fetchCompilers; menu;;
       [Ii]* ) printf "\n"; debugInfo upload; exit 0;;
       [Qq]* ) printf "\nBye!\n"; break;;
@@ -842,7 +906,9 @@ case $1 in
   fetchCompilers)
     fetchCompilers
   exit 0;;
-
+  crossover | Crossover)
+    installInCrossOver
+    exit 0;;
   sims4cx | Sims4cx)
     sims4cx
     exit 0;;
