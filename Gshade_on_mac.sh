@@ -673,11 +673,11 @@ XIVinstall() {
 installCX() {
 
   IFS=$'\n'
-  # bottles=( $(find "$HOME/Library/Application Support/CrossOver/Bottles" -maxdepth 1 -type d -exec basename {} \; ) )
-  bottles=( $(find "$HOME/Library/Application Support/XIV on Mac" -maxdepth 1 -type d -exec basename {} \; ) )
-  availableBottles=" Detected CrossOver Bottles: \n"
+  bottles=( $(find "$HOME/Library/Application Support/CrossOver/Bottles" -maxdepth 1 -type d -exec basename {} \; ) )
 
-  printf ${availableBottles}
+
+
+  printf "Detected CrossOver Bottles: \n"
   for i in "${!bottles[@]}";
   do
     printf "%s\t%s\n" "$i" "${bottles[$i]}"
@@ -686,8 +686,8 @@ installCX() {
   read -p "What Bottle is the Game installed into? Please enter the number next to your selection:" -r useIndex
   printf "\n"
 
-  # WINEPREFIX="$HOME/Library/Application Support/CrossOver/Bottles/${bottles[$useBottle]}/"
-  WINEPREFIX="$HOME/Library/Application Support/XIV on Mac/${bottles[$useIndex]}/"
+  WINEPREFIX="$HOME/Library/Application Support/CrossOver/Bottles/${bottles[$useBottle]}/"
+
 
   gameExe=""
   read -p "What is the name of the .EXE for the game you're trying to install? (note NOT the launcher if there is one - IE ffxiv_dx11.exe not ffxiv_boot.exe)" -r gameExe
