@@ -40,10 +40,10 @@ printHelp() {
 				%s list					-- List games, numbers provided are for use with remove / delete options.
 				%s lang <en|ja|ko|de|fr|it> [default|#]	-- Change the language of GShade's interface.  Defaults to the master copy if unspecified.
 				%s remove <#>				-- Remove <#> from database, leave GShade in whatever shape it's currently in.
-        %s installCX        -- Use the semi-automated CX installer.
+                                %s installCX        -- Use the semi-automated CX installer.
 				%s delete <#>				-- Delete GShade from <#> and remove from database.
-	      %s ffxiv					-- Attempt to Automatically install in FFXIV (both Square Enix's launcher and XIV On Mac supported)
-        %s sims4cx        -- Attempt auto install for Sims4 (requires Crossover + Windows version of Sims4!)
+	                        %s ffxiv					-- Attempt to Automatically install in FFXIV (both Square Enix's launcher and XIV On Mac supported)
+                                %s sims4cx        -- Attempt auto install for Sims4 (requires Crossover + Windows version of Sims4!)
 
  WINEPREFIX=/path/to/prefix	%s [dx(?)|opengl] /path/to/game.exe		-- Install to custom location with designated graphical API version. 'dxgi' is valid here.
 
